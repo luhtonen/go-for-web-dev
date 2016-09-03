@@ -5,7 +5,8 @@ html
     title Library App
     link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"
     = css
-      #search-results tr:hover {
+      #search-results tr:hover,
+      #view-results tr:hover {
         background-color: lightgrey;
         cursor: pointer;
       }
@@ -45,17 +46,31 @@ html
           tr style="text-align: left"
             th width="45%" Title
             th width="35%" Author
-            th width="20%" Classification
+            th width="15%" Classification
+            th width="5%"
         tbody#view-results
           {{range .Books}}
-            tr
+            tr id="book-row-{{.PK}}"
               td {{.Title}}
               td {{.Author}}
               td {{.Classification}}
+              td
+                a href="#" onclick="deleteBook({{.PK}})" class="btn btn-default" data-toggle="tooltip" title="Delete selected book"
+                  span class="glyphicon glyphicon-trash"
           {{end}}
 
     script type="text/javascript" src="https://code.jquery.com/jquery-3.1.0.min.js"
     = javascript
+      function deleteBook(pk) {
+        $.ajax({
+          method: "GET",
+          url: "/books/delete?pk=" + pk,
+          success: function() {
+            $("#book-row-" + pk).remove();
+          }
+        });
+      }
+
       function showSearchPage() {
         $("#search-page").show();
         $("#view-page").hide();
@@ -90,9 +105,12 @@ html
                     success: function(data) {
                       var book = JSON.parse(data);
                       if (!book) return;
-                      $("#view-results").append("<tr><td>" + book.Title
+                      $("#view-results").append("<tr id='book-row-" + book.PK + "'><td>" + book.Title
                         + "</td><td>" + book.Author + "</td><td>"
-                        + book.Classification + "</td></tr>");
+                        + book.Classification
+                        + "</td><td><a class='btn btn-default' href='#' onclick='deleteBook("
+                        + book.PK
+                        + ")' data-toggle='tooltip' title='Delete selected book'><span class='glyphicon glyphicon-trash'></span></a></td></tr>");
                     }
                   });
                 });

@@ -92,7 +92,9 @@ func main() {
 
 		if book.BookData.Title == "" {
 			http.Error(w, "Book was not found", http.StatusInternalServerError)
+			return
 		}
+
 		result, err := db.Exec("insert into books (pk, title, author, id, classification) values (?, ?, ?, ?, ?)",
 			nil, book.BookData.Title, book.BookData.Author,
 			book.BookData.ID, book.Classification.MostPopular)
@@ -111,6 +113,14 @@ func main() {
 		if err := json.NewEncoder(w).Encode(b); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+	})
+
+	mux.HandleFunc("/books/delete", func(w http.ResponseWriter, r *http.Request) {
+		if _, err := db.Exec("delete from books where pk = ?", r.FormValue("pk")); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
 	})
 
 	n := negroni.Classic()
