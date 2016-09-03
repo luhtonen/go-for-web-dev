@@ -29,7 +29,9 @@ html
 
     div#search-page class="container" style="display: none;"
       form id="search-form" onsubmit="return false;" class="form-inline"
-        input type="text" name="search" class="form-control"
+        div class="form-group"
+          label class="sr-only" for="search" Search books
+          input type="text" name="search" id="search" class="form-control"
         input type="submit" class="btn btn-default" value="Search" onclick="submitSearch()"
 
       table width="100%" class="table table-striped"
@@ -42,6 +44,14 @@ html
         tbody id="search-results"
 
     div#view-page class="container"
+      form#filter-view-results class="form-inline" style="float: right;"
+        div class="form-group"
+          label class="sr-only" for="filter" Filter books
+          select name="filter" id="filter" class="form-control" style="font-size: 18px; min-width: 10em;" onchange="filterViewResults()"
+            option value="all" All Books
+            option value="fiction" Fiction
+            option value="nonfiction" Nonfiction
+
       table width="100%" class="table table-striped"
         thead
           tr style="text-align: left"
@@ -62,19 +72,34 @@ html
 
     script type="text/javascript" src="https://code.jquery.com/jquery-3.1.0.min.js"
     = javascript
+      $(document).ready(function() {
+        $("#filter-view-results option[value='" + {{.Filter}} + "']").prop("selected", true);
+      });
+
+      function filterViewResults() {
+        $.ajax({
+          method: "GET",
+          url: "/books",
+          data: $("#filter-view-results").serialize(),
+          success: rebuildBookCollection
+        });
+      }
+
       function sortBooks(columnName) {
         $.ajax({
           method: "GET",
           url: "/books?sortBy=" + columnName,
-          success: function(result) {
-            const books = JSON.parse(result);
-            if (!books) return;
+          success: rebuildBookCollection
+        });
+      }
 
-            $("#view-results").empty();
-            books.forEach(function(book) {
-              appendBook(book);
-            });
-          }
+      function rebuildBookCollection(result) {
+        const books = JSON.parse(result);
+        if (!books) return;
+
+        $("#view-results").empty();
+        books.forEach(function(book) {
+          appendBook(book);
         });
       }
 
