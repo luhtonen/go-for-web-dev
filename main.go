@@ -9,9 +9,11 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/codegangsta/negroni"
+	"github.com/goincremental/negroni-sessions"
+	"github.com/goincremental/negroni-sessions/cookiestore"
 	gmux "github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/urfave/negroni"
 	"github.com/yosssi/ace"
 	"gopkg.in/gorp.v1"
 )
@@ -70,9 +72,12 @@ func main() {
 			return
 		}
 
+		var sortColumn string
+		if sortBy := sessions.GetSession(r).Get("SortBy"); sortBy != nil {
+			sortColumn = sortBy.(string)
+		}
 		p := Page{Books: []Book{}}
-		if _, err = dbmap.Select(&p.Books, "select * from books"); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		if !getBookCollection(&p.Books, sortColumn, w) {
 			return
 		}
 
@@ -95,6 +100,20 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}).Methods("POST")
+
+	mux.HandleFunc("/books", func(w http.ResponseWriter, r *http.Request) {
+		var b []Book
+		if !getBookCollection(&b, r.FormValue("sortBy"), w) {
+			return
+		}
+
+		sessions.GetSession(r).Set("SortBy", r.FormValue("sortBy"))
+
+		if err := json.NewEncoder(w).Encode(b); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}).Methods("GET")
 
 	mux.HandleFunc("/books", func(w http.ResponseWriter, r *http.Request) {
 		var book ClassifyBookResponse
@@ -135,9 +154,21 @@ func main() {
 	}).Methods("DELETE")
 
 	n := negroni.Classic()
+	n.Use(sessions.Sessions("go-for-web-dev", cookiestore.New([]byte("my-secret-123"))))
 	n.Use(negroni.HandlerFunc(verifyDatabase))
 	n.UseHandler(mux)
 	n.Run(":8080")
+}
+
+func getBookCollection(books *[]Book, sortCol string, w http.ResponseWriter) bool {
+	if sortCol != "title" && sortCol != "author" && sortCol != "classification" {
+		sortCol = "pk"
+	}
+	if _, err := dbmap.Select(books, "select * from books order by "+sortCol); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return false
+	}
+	return true
 }
 
 // ClassifySearchResponse struct
