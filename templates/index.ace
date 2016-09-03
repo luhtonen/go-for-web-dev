@@ -3,27 +3,69 @@ html
   head
     meta charset="utf-8"
     title Library App
+    link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"
     = css
       #search-results tr:hover {
         background-color: lightgrey;
         cursor: pointer;
       }
-  body
-    form id="search-form" onsubmit="return false;"
-      input type="text" name="search"
-      input type="submit" value="Search" onclick="submitSearch()"
 
-    table width="100%"
-      thead
-        tr style="text-align: left"
-          th width="40%" Title
-          th width="30%" Author
-          th width="10%" Year
-          th width="20%" ID
-      tbody id="search-results"
+      #page-switcher {
+        width: 100%;
+        text-align: center;
+      }
+      #page-switcher button {
+        font-size: 24px;
+        font-weight: bold;
+        margin: 1em;
+        padding: .3em;
+      }
+  body
+    div#page-switcher
+      button class="btn btn-default" onclick="showViewPage()" View Library
+      button class="btn btn-default" onclick="showSearchPage()" Add Books
+
+    div#search-page class="container" style="display: none;"
+      form id="search-form" onsubmit="return false;" class="form-inline"
+        input type="text" name="search" class="form-control"
+        input type="submit" class="btn btn-default" value="Search" onclick="submitSearch()"
+
+      table width="100%" class="table table-striped"
+        thead
+          tr style="text-align: left"
+            th width="40%" Title
+            th width="30%" Author
+            th width="10%" Year
+            th width="20%" ID
+        tbody id="search-results"
+
+    div#view-page class="container"
+      table width="100%" class="table table-striped"
+        thead
+          tr style="text-align: left"
+            th width="45%" Title
+            th width="35%" Author
+            th width="20%" Classification
+        tbody#view-results
+          {{range .Books}}
+            tr
+              td {{.Title}}
+              td {{.Author}}
+              td {{.Classification}}
+          {{end}}
 
     script type="text/javascript" src="https://code.jquery.com/jquery-3.1.0.min.js"
     = javascript
+      function showSearchPage() {
+        $("#search-page").show();
+        $("#view-page").hide();
+      }
+
+      function showViewPage() {
+        $("#search-page").hide();
+        $("#view-page").show();
+      }
+
       function submitSearch() {
         $.ajax({
           url: "/search",
@@ -44,7 +86,14 @@ html
                 row.on("click", function() {
                   $.ajax({
                     url: "/books/add?id=" + result.ID,
-                    method: "GET"
+                    method: "GET",
+                    success: function(data) {
+                      var book = JSON.parse(data);
+                      if (!book) return;
+                      $("#view-results").append("<tr><td>" + book.Title
+                        + "</td><td>" + book.Author + "</td><td>"
+                        + book.Classification + "</td></tr>");
+                    }
                   });
                 });
             });
