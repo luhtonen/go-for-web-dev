@@ -1,4 +1,8 @@
 bin
 pkg
-src
 dev.db
+src/*
+extras/goji/src/*
+extras/martini/src/*
+extras/revel/src/*
+!extras/revel/src/go-for-web-dev
