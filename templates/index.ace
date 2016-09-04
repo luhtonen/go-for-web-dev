@@ -22,10 +22,18 @@ html
         margin: 1em;
         padding: .3em;
       }
+      #user-info {
+        text-align: right;
+      }
   body
-    div#page-switcher
-      button class="btn btn-default" onclick="showViewPage()" View Library
-      button class="btn btn-default" onclick="showSearchPage()" Add Books
+    div class="container"
+      #user-info class="row"
+        div You are currently logged in as <b>{{.User}}</b>
+        a href="/logout" Logout
+
+      div#page-switcher
+        button class="btn btn-default" onclick="showViewPage()" View Library
+        button class="btn btn-default" onclick="showSearchPage()" Add Books
 
     div#search-page class="container" style="display: none;"
       form id="search-form" onsubmit="return false;" class="form-inline"
