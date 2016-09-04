@@ -74,6 +74,24 @@ func main() {
 
 	mux := gmux.NewRouter()
 
+	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		if r.FormValue("register") != "" || r.FormValue("login") != "" {
+			http.Redirect(w, r, "/", http.StatusFound)
+			return
+		}
+
+		template, err := ace.Load("templates/login", "", nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if err = template.Execute(w, nil); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	})
+
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		template, err := ace.Load("templates/index", "", nil)
 		if err != nil {
