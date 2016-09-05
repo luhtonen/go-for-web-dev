@@ -1,0 +1,21 @@
+Setup Postgres database
+===========================
+1. Create database user
+  $ createuser --pwprompt go-for-web-dev
+
+This will create database user in postgres database
+The command will prompt for password. Use same as username.
+
+2. Create database and set newly create user as owner
+  $ createdb -Ogo-for-web-dev -Eutf8 go-for-web-dev
+
+3. Setup environment variable DATABASE_URL to point to newly create database
+  $ export DATABASE_URL=postgres://go-for-web-dev:go-for-web-dev@localhost:5432/go-for-web-dev?sslmode=disable
+
+This connection string tell drivers to disable SSL mode.
+For production environment this should not be needed.
+
+4. Start server in production mode
+  $ export ENV=production; go run main.go
+
+This will run this application in production mode and will use Postgres database.
